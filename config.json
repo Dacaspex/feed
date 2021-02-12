@@ -1,0 +1,72 @@
+{
+  "storage": {
+    "host": "",
+    "name": "",
+    "username": "",
+    "password": ""
+  },
+  "feeds": [
+    {
+      "name": "My feed",
+      "publishers": [
+        {
+          "type": "telegram",
+          "token": "",
+          "chat-id": ""
+        }
+      ],
+      "panels": [
+        {
+          "type": "article",
+          "sources": [
+            "nos"
+          ],
+          "display": "article",
+          "name": "nos nieuws",
+          "header": "\uD83D\uDCF0 NOS nieuws"
+        },
+        {
+          "type": "article",
+          "sources": [
+            "reddit.dailytop.factorio"
+          ],
+          "display": "article",
+          "name": "reddit daily top factorio",
+          "header": "Factorio subreddit - top 24h"
+        },
+        {
+          "type": "calendar_event",
+          "name": "rocket launches",
+          "sources": [
+            "rocketlaunchlive"
+          ],
+          "display": "calendar_event",
+          "header": "\uD83D\uDE80 Rocket launches"
+        }
+      ]
+    }
+  ],
+  "providers": [
+    {
+      "name": "NOS",
+      "type": "nos",
+      "url": "http://feeds.nos.nl/nosnieuwsalgemeen"
+    },
+    {
+      "name": "Reddit - Factorio",
+      "type": "reddit.dailytop",
+      "username": "",
+      "password": "",
+      "clientId": "",
+      "clientSecret": "",
+      "subreddit": "factorio",
+      "amount": 5,
+      "source": "reddit.dailytop.factorio"
+    },
+    {
+      "name": "Rocket Launch Live",
+      "type": "rocketlaunchlive",
+      "url": "https://fdo.rocketlaunch.live/json/launches/next/5"
+    }
+  ]
+}
