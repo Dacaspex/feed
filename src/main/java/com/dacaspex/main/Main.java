@@ -9,6 +9,7 @@ import com.dacaspex.provider.ProviderFactory;
 import com.dacaspex.publisher.PublisherFactory;
 import com.dacaspex.storage.article.ArticleStorage;
 import com.dacaspex.storage.event.EventStorage;
+import com.dacaspex.storage.list.TemporaryRankedListStorage;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.apache.commons.cli.*;
@@ -51,26 +52,28 @@ public class Main {
         Gson gson = new Gson();
         JsonObject config = gson.fromJson(json, JsonObject.class);
         ArticleStorage articleStorage = new ArticleStorage(
-                config.get("storage").getAsJsonObject().get("host").getAsString(),
-                config.get("storage").getAsJsonObject().get("name").getAsString(),
-                config.get("storage").getAsJsonObject().get("username").getAsString(),
-                config.get("storage").getAsJsonObject().get("password").getAsString()
+            config.get("storage").getAsJsonObject().get("host").getAsString(),
+            config.get("storage").getAsJsonObject().get("name").getAsString(),
+            config.get("storage").getAsJsonObject().get("username").getAsString(),
+            config.get("storage").getAsJsonObject().get("password").getAsString()
         );
         EventStorage eventStorage = new EventStorage(
-                config.get("storage").getAsJsonObject().get("host").getAsString(),
-                config.get("storage").getAsJsonObject().get("name").getAsString(),
-                config.get("storage").getAsJsonObject().get("username").getAsString(),
-                config.get("storage").getAsJsonObject().get("password").getAsString()
+            config.get("storage").getAsJsonObject().get("host").getAsString(),
+            config.get("storage").getAsJsonObject().get("name").getAsString(),
+            config.get("storage").getAsJsonObject().get("username").getAsString(),
+            config.get("storage").getAsJsonObject().get("password").getAsString()
         );
-        ProviderFactory providerFactory = new ProviderFactory(VERSION, articleStorage, eventStorage);
+        TemporaryRankedListStorage rankedListStorage = new TemporaryRankedListStorage();
+        ProviderFactory providerFactory = new ProviderFactory(VERSION, articleStorage, rankedListStorage, eventStorage);
         PanelDescriptorFactory panelDescriptorFactory = new PanelDescriptorFactory();
         PublisherFactory publisherFactory = new PublisherFactory();
         CommandFactory commandFactory = new CommandFactory(
-                articleStorage,
-                eventStorage,
-                providerFactory,
-                publisherFactory,
-                panelDescriptorFactory
+            articleStorage,
+            eventStorage,
+            rankedListStorage,
+            providerFactory,
+            publisherFactory,
+            panelDescriptorFactory
         );
 
         // Configure commands
@@ -90,7 +93,7 @@ public class Main {
         // Determine command branch execution. Multiple branches may be executed in one run
         boolean hasExecutedCommand = false;
         if (cmd.hasOption(OPTION_RUN_PROVIDERS)) {
-            logger.info("Executing run providers command command...");
+            logger.info("Executing run providers command...");
             runProvidersCommand.run();
             hasExecutedCommand = true;
         }

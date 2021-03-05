@@ -2,32 +2,52 @@ package com.dacaspex.command;
 
 import com.dacaspex.feed.Feed;
 import com.dacaspex.feed.FeedDescriptor;
-import com.dacaspex.feed.panel.ArticlePanel;
-import com.dacaspex.feed.panel.CalendarEventsPanel;
-import com.dacaspex.feed.panel.Panel;
-import com.dacaspex.feed.panel.PanelDescriptor;
+import com.dacaspex.feed.panel.*;
+import com.dacaspex.provider.Provider;
+import com.dacaspex.provider.RunnableType;
 import com.dacaspex.storage.article.Article;
 import com.dacaspex.storage.article.ArticleStorage;
 import com.dacaspex.storage.event.CalendarEvent;
 import com.dacaspex.storage.event.EventStorage;
+import com.dacaspex.storage.list.ListItem;
+import com.dacaspex.storage.list.TemporaryRankedListStorage;
 import org.joda.time.DateTime;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class RunPublisherCommand {
-    private ArticleStorage articleStorage;
-    private EventStorage eventStorage;
-    private List<FeedDescriptor> feedDescriptors;
+    private final ArticleStorage articleStorage;
+    private final EventStorage eventStorage;
+    private final TemporaryRankedListStorage rankedListStorage;
+    private final List<FeedDescriptor> feedDescriptors;
+    private final List<Provider> providers;
 
-    public RunPublisherCommand(ArticleStorage articleStorage, EventStorage eventStorage, List<FeedDescriptor> feedDescriptors) {
+    public RunPublisherCommand(
+        ArticleStorage articleStorage,
+        EventStorage eventStorage,
+        TemporaryRankedListStorage rankedListStorage,
+        List<FeedDescriptor> feedDescriptors,
+        List<Provider> providers
+    ) {
         this.articleStorage = articleStorage;
         this.eventStorage = eventStorage;
+        this.rankedListStorage = rankedListStorage;
         this.feedDescriptors = feedDescriptors;
+        this.providers = providers;
     }
 
     public void run() {
+        runAdHocProviders();
         feedDescriptors.forEach(this::handleFeed);
+    }
+
+    private void runAdHocProviders() {
+        for (Provider provider : providers) {
+            if (provider.getRunnableType() == RunnableType.AD_HOC) {
+                provider.execute();
+            }
+        }
     }
 
     private void handleFeed(FeedDescriptor feedDescriptor) {
@@ -49,20 +69,26 @@ public class RunPublisherCommand {
                     List<Article> articles = articleStorage.getArticles(panelDescriptor.getSources(), yesterday);
 
                     panel = new ArticlePanel(
-                            panelDescriptor.getName(),
-                            panelDescriptor.getHeader(),
-                            articles
+                        panelDescriptor.getName(),
+                        panelDescriptor.getHeader(),
+                        articles
                     );
                     panels.add(panel);
                     break;
                 case CALENDAR_EVENT:
                     List<CalendarEvent> events = eventStorage.getCalendarEventsBetween(
-                            panelDescriptor.getSources(),
-                            now,
-                            sevenDaysLater
+                        panelDescriptor.getSources(),
+                        now,
+                        sevenDaysLater
                     );
 
                     panel = new CalendarEventsPanel(panelDescriptor.getName(), panelDescriptor.getHeader(), events);
+                    panels.add(panel);
+                    break;
+                case RANKED_LIST:
+                    List<ListItem> list = rankedListStorage.getList(panelDescriptor.getSources());
+
+                    panel = new RankedListPanel(panelDescriptor.getName(), panelDescriptor.getHeader(), list);
                     panels.add(panel);
                     break;
                 default:

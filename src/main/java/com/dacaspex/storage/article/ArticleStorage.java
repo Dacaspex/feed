@@ -5,13 +5,15 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import java.sql.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ArticleStorage extends MysqlStorage {
     public ArticleStorage(String host, String name, String username, String password) {
-        super(host, name,username, password);
+        super(host, name, username, password);
     }
 
     public List<Article> getArticles(List<String> sources, DateTime after) {
@@ -34,14 +36,14 @@ public class ArticleStorage extends MysqlStorage {
 
         try {
             PreparedStatement statement = connection.prepareStatement(
-                    String.format(
-                            "" +
-                                    "SELECT id, uuid, source, title, body, link, published_at " +
-                                    "FROM articles " +
-                                    "WHERE source IN %s " +
-                                    "AND published_at >= ?",
-                            inClause
-                    )
+                String.format(
+                    "" +
+                        "SELECT id, uuid, source, title, body, link, published_at " +
+                        "FROM articles " +
+                        "WHERE source IN %s " +
+                        "AND published_at >= ?",
+                    inClause
+                )
             );
 
             statement.setString(1, dtf.print(after));
@@ -64,10 +66,10 @@ public class ArticleStorage extends MysqlStorage {
         Article article = null;
         try {
             PreparedStatement statement = connection.prepareStatement(
-                    "" +
-                            "SELECT id, uuid, source, title, body, link, published_at " +
-                            "FROM articles " +
-                            "WHERE uuid = ? "
+                "" +
+                    "SELECT id, uuid, source, title, body, link, published_at " +
+                    "FROM articles " +
+                    "WHERE uuid = ? "
             );
 
             statement.setString(1, uuid);
@@ -94,9 +96,9 @@ public class ArticleStorage extends MysqlStorage {
                 DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
                 PreparedStatement statement = connection.prepareStatement("" +
-                        "INSERT IGNORE INTO articles " +
-                        "(uuid, source, title, body, link, published_at) " +
-                        "VALUES(?, ?, ?, ?, ?, ?) "
+                    "INSERT IGNORE INTO articles " +
+                    "(uuid, source, title, body, link, published_at) " +
+                    "VALUES(?, ?, ?, ?, ?, ?) "
                 );
 
                 statement.setString(1, uuid);
@@ -116,9 +118,9 @@ public class ArticleStorage extends MysqlStorage {
                 DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
                 PreparedStatement statement = connection.prepareStatement("" +
-                        "UPDATE articles " +
-                        "SET source = ?, title = ?, body = ?, link = ?, published_at = ?" +
-                        "WHERE uuid = ? "
+                    "UPDATE articles " +
+                    "SET source = ?, title = ?, body = ?, link = ?, published_at = ?" +
+                    "WHERE uuid = ? "
                 );
 
                 statement.setString(1, source);
@@ -137,15 +139,15 @@ public class ArticleStorage extends MysqlStorage {
 
     private Article getArticleFromResult(ResultSet result) throws SQLException {
         return new Article(
-                result.getInt("id"),
-                result.getString("uuid"),
-                result.getString("source"),
-                result.getString("title"),
-                result.getString("body"),
-                result.getString("link"),
-                DateTimeFormat
-                        .forPattern("yyyy-MM-dd HH:mm:ss")
-                        .parseDateTime(result.getString("published_at"))
+            result.getInt("id"),
+            result.getString("uuid"),
+            result.getString("source"),
+            result.getString("title"),
+            result.getString("body"),
+            result.getString("link"),
+            DateTimeFormat
+                .forPattern("yyyy-MM-dd HH:mm:ss")
+                .parseDateTime(result.getString("published_at"))
         );
     }
 }

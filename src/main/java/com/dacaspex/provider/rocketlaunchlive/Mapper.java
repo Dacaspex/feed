@@ -9,26 +9,26 @@ import org.joda.time.DateTime;
 public class Mapper {
     public LaunchEvent mapJsonToLaunchEvent(JsonObject json) {
         return new LaunchEvent(
-                json.get("id").getAsString(),
-                json.get("name").getAsString(),
-                json.get("slug").getAsString(),
-                mapJsonToUnreliableDateTime(json),
-                mapJsonToProvider(json.get("provider").getAsJsonObject()),
-                mapJsonToVehicle(json.get("vehicle").getAsJsonObject())
+            json.get("id").getAsString(),
+            json.get("name").getAsString(),
+            json.get("slug").getAsString(),
+            mapJsonToUnreliableDateTime(json),
+            mapJsonToProvider(json.get("provider").getAsJsonObject()),
+            mapJsonToVehicle(json.get("vehicle").getAsJsonObject())
         );
     }
 
     public Provider mapJsonToProvider(JsonObject json) {
         return new Provider(
-                json.get("id").getAsString(),
-                json.get("name").getAsString()
+            json.get("id").getAsString(),
+            json.get("name").getAsString()
         );
     }
 
     public Vehicle mapJsonToVehicle(JsonObject json) {
         return new Vehicle(
-                json.get("id").getAsString(),
-                json.get("name").getAsString()
+            json.get("id").getAsString(),
+            json.get("name").getAsString()
         );
     }
 

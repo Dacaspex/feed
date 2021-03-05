@@ -5,13 +5,13 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 public class Article {
-    private int id;
-    private String uuid;
-    private String source;
-    private String title;
-    private String body;
-    private String link;
-    private DateTime publishedAt;
+    private final int id;
+    private final String uuid;
+    private final String source;
+    private final String title;
+    private final String body;
+    private final String link;
+    private final DateTime publishedAt;
 
     public Article(int id, String uuid, String source, String title, String body, String link, DateTime publishedAt) {
         this.id = id;
@@ -52,14 +52,14 @@ public class Article {
         DateTimeFormatter dtf = DateTimeFormat.forPattern("MM/dd/yyyy HH:mm:ss");
 
         return String.format(
-                "Article(id = %s, uuid = %s, source = %s, title = %s, body = %s, link = %s, publishedAt = %s",
-                id,
-                uuid,
-                source,
-                title,
-                body,
-                link,
-                dtf.print(publishedAt)
+            "Article(id = %s, uuid = %s, source = %s, title = %s, body = %s, link = %s, publishedAt = %s",
+            id,
+            uuid,
+            source,
+            title,
+            body,
+            link,
+            dtf.print(publishedAt)
         );
     }
 }

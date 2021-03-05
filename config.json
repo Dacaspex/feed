@@ -67,6 +67,16 @@
       "name": "Rocket Launch Live",
       "type": "rocketlaunchlive",
       "url": "https://fdo.rocketlaunch.live/json/launches/next/5"
+    },
+    {
+      "name": "Tweakers news",
+      "type": "tweakers",
+      "topicWhitelist": [
+        {
+          "type": "nieuws",
+          "subtype": "browsers"
+        }
+      ]
     }
   ]
 }

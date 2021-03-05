@@ -3,10 +3,10 @@ package com.dacaspex.feed.panel;
 import java.util.List;
 
 public class PanelDescriptor {
-    private String name;
-    private String header;
-    private PanelType type;
-    private List<String> sources;
+    private final String name;
+    private final String header;
+    private final PanelType type;
+    private final List<String> sources;
 
     public PanelDescriptor(String name, String header, PanelType type, List<String> sources) {
         this.name = name;

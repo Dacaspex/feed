@@ -5,7 +5,7 @@ import com.dacaspex.storage.article.Article;
 import java.util.List;
 
 public class ArticlePanel extends Panel {
-    private List<Article> articles;
+    private final List<Article> articles;
 
     public ArticlePanel(String name, String header, List<Article> articles) {
         super(name, header);

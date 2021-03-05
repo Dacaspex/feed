@@ -39,15 +39,15 @@ public class EventStorage extends MysqlStorage {
 
         try {
             PreparedStatement statement = connection.prepareStatement(
-                    String.format(
-                            "" +
-                                    "SELECT id, uuid, date, header, url " +
-                                    "FROM calendar_events " +
-                                    "WHERE source IN %s " +
-                                    "AND date >= ? " +
-                                    "AND date <= ?",
-                            inClause
-                    )
+                String.format(
+                    "" +
+                        "SELECT id, uuid, date, header, url " +
+                        "FROM calendar_events " +
+                        "WHERE source IN %s " +
+                        "AND date >= ? " +
+                        "AND date <= ?",
+                    inClause
+                )
             );
 
             statement.setString(1, dtf.print(start));
@@ -69,10 +69,10 @@ public class EventStorage extends MysqlStorage {
         CalendarEvent event = null;
         try {
             PreparedStatement statement = connection.prepareStatement(
-                    "" +
-                            "SELECT id, uuid, date, header, url " +
-                            "FROM calendar_events " +
-                            "WHERE uuid = ? "
+                "" +
+                    "SELECT id, uuid, date, header, url " +
+                    "FROM calendar_events " +
+                    "WHERE uuid = ? "
             );
 
             statement.setString(1, uuid);
@@ -99,9 +99,9 @@ public class EventStorage extends MysqlStorage {
                 DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
                 PreparedStatement statement = connection.prepareStatement("" +
-                        "INSERT IGNORE INTO calendar_events " +
-                        "(uuid, source, date, header, url) " +
-                        "VALUES(?, ?, ?, ?, ?) "
+                    "INSERT IGNORE INTO calendar_events " +
+                    "(uuid, source, date, header, url) " +
+                    "VALUES(?, ?, ?, ?, ?) "
                 );
 
                 int i = 1;
@@ -121,9 +121,9 @@ public class EventStorage extends MysqlStorage {
                 DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
                 PreparedStatement statement = connection.prepareStatement("" +
-                        "UPDATE calendar_events " +
-                        "SET date = ?, header = ?, url = ?" +
-                        "WHERE uuid = ? "
+                    "UPDATE calendar_events " +
+                    "SET date = ?, header = ?, url = ?" +
+                    "WHERE uuid = ? "
                 );
 
                 int i = 1;

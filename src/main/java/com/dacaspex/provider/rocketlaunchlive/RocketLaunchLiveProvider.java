@@ -1,6 +1,7 @@
 package com.dacaspex.provider.rocketlaunchlive;
 
 import com.dacaspex.provider.Provider;
+import com.dacaspex.provider.RunnableType;
 import com.dacaspex.provider.rocketlaunchlive.model.LaunchEvent;
 import com.dacaspex.storage.event.EventStorage;
 import com.google.gson.Gson;
@@ -16,23 +17,35 @@ public class RocketLaunchLiveProvider implements Provider {
     private final String SOURCE = "rocketlaunchlive";
     private final String BASE_URL = "https://www.rocketlaunch.live/launch";
 
+    private final String name;
     private final String url;
     private final EventStorage eventStorage;
     private final Mapper mapper;
 
-    public RocketLaunchLiveProvider(String url, EventStorage eventStorage) {
+    public RocketLaunchLiveProvider(String name, String url, EventStorage eventStorage) {
+        this.name = name;
         this.url = url;
         this.eventStorage = eventStorage;
         this.mapper = new Mapper();
     }
 
     @Override
-    public void invoke() {
+    public RunnableType getRunnableType() {
+        return RunnableType.ANYTIME;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public void execute() {
         OkHttpClient httpClient = new OkHttpClient();
 
         Request request = new Request.Builder()
-                .url(url)
-                .build();
+            .url(url)
+            .build();
 
         Call call = httpClient.newCall(request);
 
@@ -51,11 +64,11 @@ public class RocketLaunchLiveProvider implements Provider {
                 LaunchEvent event = mapper.mapJsonToLaunchEvent(e.getAsJsonObject());
 
                 eventStorage.insertOrUpdateCalendarEvent(
-                        event.getId(),
-                        SOURCE,
-                        event.getDate(),
-                        buildHeader(event),
-                        buildUrl(event)
+                    event.getId(),
+                    SOURCE,
+                    event.getDate(),
+                    buildHeader(event),
+                    buildUrl(event)
                 );
             });
 
@@ -66,10 +79,10 @@ public class RocketLaunchLiveProvider implements Provider {
 
     private String buildHeader(LaunchEvent event) {
         return String.format(
-                "%s using %s (%s)",
-                event.getName(),
-                event.getVehicle().getName(),
-                event.getProvider().getName()
+            "%s using %s (%s)",
+            event.getName(),
+            event.getVehicle().getName(),
+            event.getProvider().getName()
         );
     }
 

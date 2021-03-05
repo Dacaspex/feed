@@ -14,10 +14,10 @@ public class PanelDescriptorFactory {
         json.getAsJsonArray("sources").forEach(e1 -> sources.add(e1.getAsString()));
 
         return new PanelDescriptor(
-                json.get("name").getAsString(),
-                json.get("header").getAsString(),
-                PanelType.valueOf(json.get("display").getAsString().toUpperCase()),
-                sources
+            json.get("name").getAsString(),
+            json.get("header").getAsString(),
+            PanelType.valueOf(json.get("display").getAsString().toUpperCase()),
+            sources
         );
     }
 }

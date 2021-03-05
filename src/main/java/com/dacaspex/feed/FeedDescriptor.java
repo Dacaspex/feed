@@ -6,9 +6,9 @@ import com.dacaspex.publisher.Publisher;
 import java.util.List;
 
 public class FeedDescriptor {
-    private String name;
-    private List<Publisher> publishers;
-    private List<PanelDescriptor> panelDescriptors;
+    private final String name;
+    private final List<Publisher> publishers;
+    private final List<PanelDescriptor> panelDescriptors;
 
     public FeedDescriptor(String name, List<Publisher> publishers, List<PanelDescriptor> panelDescriptors) {
         this.name = name;

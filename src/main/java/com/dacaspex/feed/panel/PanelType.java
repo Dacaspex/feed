@@ -2,5 +2,6 @@ package com.dacaspex.feed.panel;
 
 public enum PanelType {
     ARTICLE,
-    CALENDAR_EVENT
+    CALENDAR_EVENT,
+    RANKED_LIST,
 }

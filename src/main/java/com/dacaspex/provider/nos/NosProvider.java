@@ -3,6 +3,7 @@ package com.dacaspex.provider.nos;
 import com.apptastic.rssreader.Item;
 import com.apptastic.rssreader.RssReader;
 import com.dacaspex.provider.Provider;
+import com.dacaspex.provider.RunnableType;
 import com.dacaspex.storage.article.ArticleStorage;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -14,18 +15,31 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class NosProvider implements Provider {
-    private RssReader rssReader;
-    private String url;
-    private ArticleStorage articleStorage;
+    private final RssReader rssReader;
 
-    public NosProvider(String url, ArticleStorage articleStorage) {
+    private final String name;
+    private final String url;
+    private final ArticleStorage articleStorage;
+
+    public NosProvider(String name, String url, ArticleStorage articleStorage) {
         this.rssReader = new RssReader();
+        this.name = name;
         this.url = url;
         this.articleStorage = articleStorage;
     }
 
     @Override
-    public void invoke() {
+    public RunnableType getRunnableType() {
+        return RunnableType.ANYTIME;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public void execute() {
         // Read from the RSS feed
         Stream<Item> feed;
         try {
@@ -46,12 +60,12 @@ public class NosProvider implements Provider {
 
             // Store article
             articleStorage.insertOrUpdateArticle(
-                    article.getGuid().orElseThrow(),
-                    "nos",
-                    article.getTitle().orElseThrow(),
-                    removeHtml(article.getDescription().orElseThrow()),
-                    article.getLink().orElseThrow(),
-                    dt
+                article.getGuid().orElseThrow(),
+                "nos",
+                article.getTitle().orElseThrow(),
+                removeHtml(article.getDescription().orElseThrow()),
+                article.getLink().orElseThrow(),
+                dt
             );
         }
     }
@@ -62,9 +76,9 @@ public class NosProvider implements Provider {
      */
     private String removeHtml(String string) {
         return string
-                .replaceAll("<p>", "")
-                .replaceAll("</p>", "")
-                .replaceAll("<h2>", "")
-                .replaceAll("</h2>", "");
+            .replaceAll("<p>", "")
+            .replaceAll("</p>", "")
+            .replaceAll("<h2>", "")
+            .replaceAll("</h2>", "");
     }
 }

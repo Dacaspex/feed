@@ -11,7 +11,7 @@ public class MysqlStorage {
     private final String name;
     private final String username;
     private final String password;
-    private boolean isInitialised;
+    private final boolean isInitialised;
 
     protected Connection connection;
 
@@ -28,12 +28,12 @@ public class MysqlStorage {
 
         try {
             String url = String.format(
-                    "jdbc:mysql://%s/%s?&%s&%s&%s",
-                    host,
-                    name,
-                    "useJDBCCompliantTimezoneShift=true",
-                    "&useLegacyDatetimeCode=false",
-                    "&serverTimezone=GMT"
+                "jdbc:mysql://%s/%s?&%s&%s&%s",
+                host,
+                name,
+                "useJDBCCompliantTimezoneShift=true",
+                "&useLegacyDatetimeCode=false",
+                "&serverTimezone=GMT"
             );
 
             Class.forName(DRIVER);
