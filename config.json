@@ -54,14 +54,16 @@
     },
     {
       "name": "Reddit - Factorio",
-      "type": "reddit.dailytop",
+      "type": "reddit",
       "username": "",
       "password": "",
       "clientId": "",
       "clientSecret": "",
       "subreddit": "factorio",
       "amount": 5,
-      "source": "reddit.dailytop.factorio"
+      "source": "reddit.factorio.top.weekly",
+      "timePeriod": "weekly",
+      "sort": "top"
     },
     {
       "name": "Rocket Launch Live",

@@ -10,12 +10,16 @@ import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 
 public class RocketLaunchLiveProvider implements Provider {
-    private final String SOURCE = "rocketlaunchlive";
-    private final String BASE_URL = "https://www.rocketlaunch.live/launch";
+    private final static Logger logger = LogManager.getLogger();
+
+    private final static String SOURCE = "rocketlaunchlive";
+    private final static String BASE_URL = "https://www.rocketlaunch.live/launch";
 
     private final String name;
     private final String url;
@@ -73,7 +77,7 @@ public class RocketLaunchLiveProvider implements Provider {
             });
 
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
     }
 

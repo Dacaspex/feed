@@ -80,8 +80,8 @@ public class TweakersProvider implements Provider {
                     logger.error(ex);
                 }
             }
-        } catch (IOException ex) {
-            ex.printStackTrace();
+        } catch (IOException e) {
+            logger.error(e);
         }
     }
 

@@ -11,10 +11,11 @@ import net.dean.jraw.http.UserAgent;
 import net.dean.jraw.models.Listing;
 import net.dean.jraw.models.Submission;
 import net.dean.jraw.models.SubredditSort;
-import net.dean.jraw.models.TimePeriod;
 import net.dean.jraw.oauth.Credentials;
 import net.dean.jraw.oauth.OAuthHelper;
 import net.dean.jraw.pagination.DefaultPaginator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,8 @@ public class RedditTopProvider implements Provider {
     private static final String APP_ID = "com.dacaspex.feed";
     private static final String REDDIT_BASE_URL = "https://www.reddit.com";
 
+    private final static Logger logger = LogManager.getLogger();
+
     private final String name;
     private final TemporaryRankedListStorage rankedListStorage;
     private final String source;
@@ -40,6 +43,8 @@ public class RedditTopProvider implements Provider {
     private final String clientSecret;
     private final String subreddit;
     private final int amount;
+    private final TimePeriod timePeriod;
+    private final Sort sort;
 
     public RedditTopProvider(
         String name,
@@ -51,7 +56,9 @@ public class RedditTopProvider implements Provider {
         String clientId,
         String clientSecret,
         String subreddit,
-        int amount
+        int amount,
+        TimePeriod timePeriod,
+        Sort sort
     ) {
         this.name = name;
         this.rankedListStorage = rankedListStorage;
@@ -63,6 +70,8 @@ public class RedditTopProvider implements Provider {
         this.clientSecret = clientSecret;
         this.subreddit = subreddit;
         this.amount = amount;
+        this.timePeriod = timePeriod;
+        this.sort = sort;
     }
 
     @Override
@@ -84,17 +93,17 @@ public class RedditTopProvider implements Provider {
             Credentials credentials = Credentials.script(redditUsername, redditPassword, clientId, clientSecret);
 
             // https://github.com/square/okhttp/issues/1739
-            // TODO: Catch exception to shutdown gracefully
             NetworkAdapter adapter = new OkHttpNetworkAdapter(userAgent);
 
             RedditClient redditClient = OAuthHelper.automatic(adapter, credentials);
 
+            // Get the posts from reddit
             DefaultPaginator<Submission> paginator = redditClient
                 .subreddit(subreddit)
                 .posts()
                 .limit(amount)
-                .sorting(SubredditSort.TOP)
-                .timePeriod(TimePeriod.DAY)
+                .sorting(getSubredditSort(sort))
+                .timePeriod(getTimePeriod(timePeriod))
                 .build();
 
             Listing<Submission> popular = paginator.next();
@@ -112,11 +121,53 @@ public class RedditTopProvider implements Provider {
 
             rankedListStorage.addList(source, list);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error(e);
         }
     }
 
     private String getRedditUrl(String permalink) {
         return String.format("%s%s", REDDIT_BASE_URL, permalink);
+    }
+
+    private net.dean.jraw.models.TimePeriod getTimePeriod(TimePeriod timePeriod) {
+        switch (timePeriod) {
+            case HOURLY:
+                return net.dean.jraw.models.TimePeriod.HOUR;
+            case DAILY:
+                return net.dean.jraw.models.TimePeriod.DAY;
+            case WEEKLY:
+                return net.dean.jraw.models.TimePeriod.WEEK;
+            case MONTHLY:
+                return net.dean.jraw.models.TimePeriod.MONTH;
+            case YEARLY:
+                return net.dean.jraw.models.TimePeriod.YEAR;
+            case ALL_TIME:
+                return net.dean.jraw.models.TimePeriod.ALL;
+            default:
+                throw new IllegalArgumentException(
+                    String.format("Could not map %s to a valid time period", timePeriod.name())
+                );
+        }
+    }
+
+    private SubredditSort getSubredditSort(Sort sort) {
+        switch (sort) {
+            case HOT:
+                return SubredditSort.HOT;
+            case BEST:
+                return SubredditSort.BEST;
+            case NEW:
+                return SubredditSort.NEW;
+            case RISING:
+                return SubredditSort.RISING;
+            case CONTROVERSIAL:
+                return SubredditSort.CONTROVERSIAL;
+            case TOP:
+                return SubredditSort.TOP;
+            default:
+                throw new IllegalArgumentException(
+                    String.format("Could not map %s to a valid subreddit sort", sort.name())
+                );
+        }
     }
 }

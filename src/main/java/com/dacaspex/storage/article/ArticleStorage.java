@@ -11,6 +11,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * TODO: Let methods throw exceptions and let the callers handle with them
+ */
 public class ArticleStorage extends MysqlStorage {
     public ArticleStorage(String host, String name, String username, String password) {
         super(host, name, username, password);

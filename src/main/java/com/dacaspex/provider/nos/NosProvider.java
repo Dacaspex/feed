@@ -5,6 +5,8 @@ import com.apptastic.rssreader.RssReader;
 import com.dacaspex.provider.Provider;
 import com.dacaspex.provider.RunnableType;
 import com.dacaspex.storage.article.ArticleStorage;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -15,8 +17,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class NosProvider implements Provider {
-    private final RssReader rssReader;
+    private final static Logger logger = LogManager.getLogger();
 
+    private final RssReader rssReader;
     private final String name;
     private final String url;
     private final ArticleStorage articleStorage;
@@ -45,7 +48,7 @@ public class NosProvider implements Provider {
         try {
             feed = rssReader.read(url);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
             return;
         }
 

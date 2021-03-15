@@ -3,6 +3,8 @@ package com.dacaspex.provider;
 import com.dacaspex.provider.exception.NoSuchProviderException;
 import com.dacaspex.provider.nos.NosProvider;
 import com.dacaspex.provider.reddit.RedditTopProvider;
+import com.dacaspex.provider.reddit.Sort;
+import com.dacaspex.provider.reddit.TimePeriod;
 import com.dacaspex.provider.rocketlaunchlive.RocketLaunchLiveProvider;
 import com.dacaspex.provider.tweakers.TweakersProvider;
 import com.dacaspex.storage.article.ArticleStorage;
@@ -39,7 +41,7 @@ public class ProviderFactory {
         switch (type) {
             case "nos":
                 return nosProviderFromJson(json);
-            case "reddit.dailytop":
+            case "reddit":
                 return redditDailyTopProviderFromJson(json);
             case "rocketlaunchlive":
                 return rocketLaunchLiveProviderFromJson(json);
@@ -71,7 +73,9 @@ public class ProviderFactory {
             json.get("clientId").getAsString(),
             json.get("clientSecret").getAsString(),
             json.get("subreddit").getAsString(),
-            json.get("amount").getAsInt()
+            json.get("amount").getAsInt(),
+            TimePeriod.fromString(json.get("timePeriod").getAsString()),
+            Sort.fromString(json.get("sort").getAsString())
         );
     }
 
