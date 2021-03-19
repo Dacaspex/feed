@@ -1,5 +1,6 @@
 # >>> Project specific
 config.local.json
+config.test.json
 flyway.local.properties
 # <<<
 

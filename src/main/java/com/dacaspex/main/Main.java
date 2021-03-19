@@ -25,6 +25,7 @@ public class Main {
     private static final String DEFAULT_CONFIG_LOCATION = "config.local.json";
     private static final String OPTION_RUN_PROVIDERS = "i";
     private static final String OPTION_RUN_PUBLISHERS = "o";
+    private static final String OPTION_CONFIG_LOCATION = "c";
 
     private final static Logger logger = LogManager.getLogger();
 
@@ -39,8 +40,14 @@ public class Main {
 
         // Load config
         String json = null;
+
+        String configLocation = cmd.hasOption(OPTION_CONFIG_LOCATION)
+            ? cmd.getOptionValue(OPTION_CONFIG_LOCATION)
+            : DEFAULT_CONFIG_LOCATION;
+
         try {
-            json = getConfig(DEFAULT_CONFIG_LOCATION);
+            json = getConfig(configLocation);
+            logger.info("Using configuration file '{}'", configLocation);
         } catch (IOException e) {
             logger.fatal("Could not load configuration file: {}", e.getMessage());
 
@@ -121,6 +128,7 @@ public class Main {
 
         options.addOption(OPTION_RUN_PROVIDERS, "run-providers", false, "Run content providers");
         options.addOption(OPTION_RUN_PUBLISHERS, "run-publishers", false, "Run publishers");
+        options.addOption(OPTION_CONFIG_LOCATION, "config", true, "Location of config file");
 
         return options;
     }

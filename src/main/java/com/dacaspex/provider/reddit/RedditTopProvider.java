@@ -97,6 +97,9 @@ public class RedditTopProvider implements Provider {
 
             RedditClient redditClient = OAuthHelper.automatic(adapter, credentials);
 
+            // JRAW has request/response logging enabled by default. We disable that here
+            redditClient.setLogger(new NullHttpLogger());
+
             // Get the posts from reddit
             DefaultPaginator<Submission> paginator = redditClient
                 .subreddit(subreddit)

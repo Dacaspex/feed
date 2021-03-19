@@ -59,6 +59,8 @@
                 <version>4.0.3</version>
             </plugin>
         </plugins>
+
+        <finalName>feed</finalName>
     </build>
 
     <repositories>
