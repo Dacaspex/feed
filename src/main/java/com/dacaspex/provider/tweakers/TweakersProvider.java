@@ -2,9 +2,9 @@ package com.dacaspex.provider.tweakers;
 
 import com.dacaspex.provider.Provider;
 import com.dacaspex.provider.RunnableType;
+import com.dacaspex.provider.condition.Conditions;
 import com.dacaspex.provider.tweakers.exception.UnexpectedSchemaException;
 import com.dacaspex.storage.article.ArticleStorage;
-import com.dacaspex.util.common.Pair;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlButton;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
@@ -14,7 +14,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class TweakersProvider implements Provider {
     private static final String NEWS_URL = "https://tweakers.net/";
@@ -25,13 +24,13 @@ public class TweakersProvider implements Provider {
     private final String name;
     private final ArticleStorage articleStorage;
     private final Mapper mapper;
-    private final List<Pair<String, String>> typeWhitelist;
+    private final Conditions<HeadlineItem> conditions;
 
-    public TweakersProvider(String name, ArticleStorage articleStorage, List<Pair<String, String>> typeWhitelist) {
+    public TweakersProvider(String name, ArticleStorage articleStorage, Conditions<HeadlineItem> conditions) {
         this.name = name;
         this.articleStorage = articleStorage;
         this.mapper = new Mapper();
-        this.typeWhitelist = typeWhitelist;
+        this.conditions = conditions;
     }
 
     @Override
@@ -64,7 +63,7 @@ public class TweakersProvider implements Provider {
                 try {
                     HeadlineItem item = mapper.mapElementToHeadlineItem(e);
 
-                    if (!matchesWhitelist(item)) {
+                    if (!conditions.holds(item)) {
                         continue;
                     }
 
@@ -83,11 +82,5 @@ public class TweakersProvider implements Provider {
         } catch (IOException e) {
             logger.error(e);
         }
-    }
-
-    private boolean matchesWhitelist(HeadlineItem item) {
-        return typeWhitelist.stream().anyMatch(p ->
-            item.getType().equalsIgnoreCase(p.getKey()) && item.getSubType().equalsIgnoreCase(p.getValue())
-        );
     }
 }

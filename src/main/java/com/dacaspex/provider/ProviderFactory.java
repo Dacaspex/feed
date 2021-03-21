@@ -1,16 +1,18 @@
 package com.dacaspex.provider;
 
+import com.dacaspex.provider.condition.Clause;
+import com.dacaspex.provider.condition.Condition;
+import com.dacaspex.provider.condition.Conditions;
 import com.dacaspex.provider.exception.NoSuchProviderException;
 import com.dacaspex.provider.nos.NosProvider;
 import com.dacaspex.provider.reddit.RedditTopProvider;
 import com.dacaspex.provider.reddit.Sort;
 import com.dacaspex.provider.reddit.TimePeriod;
 import com.dacaspex.provider.rocketlaunchlive.RocketLaunchLiveProvider;
-import com.dacaspex.provider.tweakers.TweakersProvider;
+import com.dacaspex.provider.tweakers.*;
 import com.dacaspex.storage.article.ArticleStorage;
 import com.dacaspex.storage.event.EventStorage;
 import com.dacaspex.storage.list.TemporaryRankedListStorage;
-import com.dacaspex.util.common.Pair;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
@@ -90,22 +92,36 @@ public class ProviderFactory {
     }
 
     private TweakersProvider tweakersProviderFromJson(JsonObject json) {
-        List<Pair<String, String>> types = new ArrayList<>();
+        List<Clause<HeadlineItem>> clauses = new ArrayList<>();
+        json.get("clauses").getAsJsonArray().forEach(e -> {
+            JsonObject clauseObject = e.getAsJsonObject();
+            List<Condition<HeadlineItem>> conditions = new ArrayList<>();
 
-        json.get("topicWhitelist").getAsJsonArray().forEach(e -> {
-            JsonObject typeObject = e.getAsJsonObject();
-            types.add(
-                new Pair<>(
-                    typeObject.get("type").getAsString(),
-                    typeObject.get("subtype").getAsString()
-                )
-            );
+            if (clauseObject.has("type")) {
+                conditions.add(new TypeCondition(clauseObject.get("type").getAsString()));
+            }
+
+            if (clauseObject.has("subtype")) {
+                conditions.add(new SubTypeCondition(clauseObject.get("subtype").getAsString()));
+            }
+
+            if (clauseObject.has("titleContains")) {
+                List<String> tokens = new ArrayList<>();
+                if (clauseObject.get("titleContains").isJsonArray()) {
+                    clauseObject.getAsJsonArray("titleContains").forEach(t -> tokens.add(t.getAsString()));
+                } else {
+                    tokens.add(clauseObject.get("titleContains").getAsString());
+                }
+                conditions.add(new TitleContainsCondition(tokens));
+            }
+
+            clauses.add(new Clause<>(conditions));
         });
 
         return new TweakersProvider(
             json.get("name").getAsString(),
             articleStorage,
-            types
+            new Conditions<>(clauses)
         );
     }
 }
