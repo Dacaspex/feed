@@ -49,6 +49,7 @@ public class TweakersProvider implements Provider {
             // This is not nice, but it suppresses errors and warning
             webClient.getOptions().setUseInsecureSSL(true);
             webClient.getOptions().setJavaScriptEnabled(false);
+            webClient.setCssErrorHandler(new VoidCssErrorHandler());
 
             // To access the main page, we must accept cookies
             HtmlPage cookiePage = webClient.getPage(NEWS_URL);
