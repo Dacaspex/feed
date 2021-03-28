@@ -2,6 +2,8 @@ package com.dacaspex.provider.rocketlaunchlive;
 
 import com.dacaspex.provider.Provider;
 import com.dacaspex.provider.RunnableType;
+import com.dacaspex.provider.condition.Condition;
+import com.dacaspex.provider.condition.Conditions;
 import com.dacaspex.provider.rocketlaunchlive.model.LaunchEvent;
 import com.dacaspex.storage.event.EventStorage;
 import com.google.gson.Gson;
@@ -25,12 +27,14 @@ public class RocketLaunchLiveProvider implements Provider {
     private final String url;
     private final EventStorage eventStorage;
     private final Mapper mapper;
+    private final Conditions<LaunchEvent> conditions;
 
-    public RocketLaunchLiveProvider(String name, String url, EventStorage eventStorage) {
+    public RocketLaunchLiveProvider(String name, String url, EventStorage eventStorage, Conditions<LaunchEvent> conditions) {
         this.name = name;
         this.url = url;
         this.eventStorage = eventStorage;
         this.mapper = new Mapper();
+        this.conditions = conditions;
     }
 
     @Override
@@ -67,13 +71,23 @@ public class RocketLaunchLiveProvider implements Provider {
             json.get("result").getAsJsonArray().forEach(e -> {
                 LaunchEvent event = mapper.mapJsonToLaunchEvent(e.getAsJsonObject());
 
-                eventStorage.insertOrUpdateCalendarEvent(
-                    event.getId(),
-                    SOURCE,
-                    event.getDate(),
-                    buildHeader(event),
-                    buildUrl(event)
-                );
+                if (!conditions.holds(event)) {
+                    return;
+                }
+
+                System.out.println(event.getName());
+                System.out.println(event.getVehicle().getName());
+                System.out.println(event.getDate().toString());
+                System.out.println(event.getProvider().getName());
+                System.out.println();
+
+//                eventStorage.insertOrUpdateCalendarEvent(
+//                    event.getId(),
+//                    SOURCE,
+//                    event.getDate(),
+//                    buildHeader(event),
+//                    buildUrl(event)
+//                );
             });
 
         } catch (IOException e) {

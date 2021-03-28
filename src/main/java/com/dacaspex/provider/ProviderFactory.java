@@ -9,6 +9,8 @@ import com.dacaspex.provider.reddit.RedditTopProvider;
 import com.dacaspex.provider.reddit.Sort;
 import com.dacaspex.provider.reddit.TimePeriod;
 import com.dacaspex.provider.rocketlaunchlive.RocketLaunchLiveProvider;
+import com.dacaspex.provider.rocketlaunchlive.condition.ProviderNameCondition;
+import com.dacaspex.provider.rocketlaunchlive.model.LaunchEvent;
 import com.dacaspex.provider.tweakers.*;
 import com.dacaspex.storage.article.ArticleStorage;
 import com.dacaspex.storage.event.EventStorage;
@@ -84,10 +86,23 @@ public class ProviderFactory {
     private RocketLaunchLiveProvider rocketLaunchLiveProviderFromJson(JsonObject json) {
         // TODO: Validate schema before accessing
 
+        List<Clause<LaunchEvent>> clauses = new ArrayList<>();
+        json.get("clauses").getAsJsonArray().forEach(e -> {
+            JsonObject clauseObject = e.getAsJsonObject();
+            List<Condition<LaunchEvent>> conditions = new ArrayList<>();
+
+            if (clauseObject.has("providerName")) {
+                conditions.add(new ProviderNameCondition(clauseObject.get("providerName").getAsString()));
+            }
+
+            clauses.add(new Clause<>(conditions));
+        });
+
         return new RocketLaunchLiveProvider(
             json.get("name").getAsString(),
             json.get("url").getAsString(),
-            eventStorage
+            eventStorage,
+            new Conditions<>(clauses)
         );
     }
 
