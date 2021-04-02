@@ -10,6 +10,6 @@ public class Conditions<T> {
     }
 
     public boolean holds(T value) {
-        return clauses.stream().anyMatch(c -> c.holds(value));
+        return clauses.size() == 0 || clauses.stream().anyMatch(c -> c.holds(value));
     }
 }
