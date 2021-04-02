@@ -75,19 +75,13 @@ public class RocketLaunchLiveProvider implements Provider {
                     return;
                 }
 
-                System.out.println(event.getName());
-                System.out.println(event.getVehicle().getName());
-                System.out.println(event.getDate().toString());
-                System.out.println(event.getProvider().getName());
-                System.out.println();
-
-//                eventStorage.insertOrUpdateCalendarEvent(
-//                    event.getId(),
-//                    SOURCE,
-//                    event.getDate(),
-//                    buildHeader(event),
-//                    buildUrl(event)
-//                );
+                eventStorage.insertOrUpdateCalendarEvent(
+                    event.getId(),
+                    SOURCE,
+                    event.getDate(),
+                    buildHeader(event),
+                    buildUrl(event)
+                );
             });
 
         } catch (IOException e) {
