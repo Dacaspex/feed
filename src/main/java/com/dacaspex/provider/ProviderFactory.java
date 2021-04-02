@@ -92,7 +92,7 @@ public class ProviderFactory {
         // TODO: Validate schema before accessing
 
         List<Clause<LaunchEvent>> clauses = new ArrayList<>();
-        json.get("clauses").getAsJsonArray().forEach(e -> {
+        json.get("conditions").getAsJsonArray().forEach(e -> {
             JsonObject clauseObject = e.getAsJsonObject();
             List<Condition<LaunchEvent>> conditions = new ArrayList<>();
 

@@ -3,10 +3,10 @@ package com.dacaspex.provider.themoviedb.model;
 import java.util.List;
 
 public class Paginated<T> {
-    private List<T> objects;
-    private int page;
-    private int totalPages;
-    private int totalResults;
+    private final List<T> objects;
+    private final int page;
+    private final int totalPages;
+    private final int totalResults;
 
     public Paginated(
         List<T> objects,

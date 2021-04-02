@@ -53,20 +53,20 @@ public class RunPublisherCommand {
     private void handleFeed(FeedDescriptor feedDescriptor) {
         List<Panel> panels = new ArrayList<>();
 
-        // TODO: Extract this to the config
-        // This program is run daily, so therefore we are only interested in articles that
-        // are at most a day old
-        DateTime now = new DateTime();
-        DateTime yesterday = now.minusDays(1);
-        DateTime sevenDaysLater = now.plusDays(7);
-
         // For each panel descriptor, we get the data for that panel from its appropriate place and
         // add it to the list of panels
         Panel panel;
         for (PanelDescriptor panelDescriptor : feedDescriptor.getPanelDescriptors()) {
             switch (panelDescriptor.getType()) {
                 case ARTICLE:
-                    List<Article> articles = articleStorage.getArticles(panelDescriptor.getSources(), yesterday);
+                    // TODO: Change fetching of articles to a proper date time interval, instead of a half
+                    //   open interval as is right now
+                    DateTime after = panelDescriptor.getRelevanceInterval().getStart();
+                    List<Article> articles = articleStorage.getArticles(panelDescriptor.getSources(), after);
+
+                    if (articles.size() == 0) {
+                        break;
+                    }
 
                     panel = new ArticlePanel(
                         panelDescriptor.getName(),
@@ -78,15 +78,25 @@ public class RunPublisherCommand {
                 case CALENDAR_EVENT:
                     List<CalendarEvent> events = eventStorage.getCalendarEventsBetween(
                         panelDescriptor.getSources(),
-                        now,
-                        sevenDaysLater
+                        panelDescriptor.getRelevanceInterval().getStart(),
+                        panelDescriptor.getRelevanceInterval().getEnd()
                     );
+
+                    if (events.size() == 0) {
+                        break;
+                    }
 
                     panel = new CalendarEventsPanel(panelDescriptor.getName(), panelDescriptor.getHeader(), events);
                     panels.add(panel);
                     break;
                 case RANKED_LIST:
+                    // TODO: Implement relevance interval for the ranked list as well. Right now it is just an ad hoc
+                    //   provider but we can do something with that
                     List<ListItem> list = rankedListStorage.getList(panelDescriptor.getSources());
+
+                    if (list.size() == 0) {
+                        break;
+                    }
 
                     panel = new RankedListPanel(panelDescriptor.getName(), panelDescriptor.getHeader(), list);
                     panels.add(panel);
