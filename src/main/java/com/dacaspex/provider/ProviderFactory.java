@@ -9,6 +9,9 @@ import com.dacaspex.provider.reddit.RedditTopProvider;
 import com.dacaspex.provider.reddit.Sort;
 import com.dacaspex.provider.reddit.TimePeriod;
 import com.dacaspex.provider.rocketlaunchlive.RocketLaunchLiveProvider;
+import com.dacaspex.provider.themoviedb.TheMovieDbProvider;
+import com.dacaspex.provider.themoviedb.condition.HasGenresCondition;
+import com.dacaspex.provider.themoviedb.model.Movie;
 import com.dacaspex.provider.tweakers.*;
 import com.dacaspex.storage.article.ArticleStorage;
 import com.dacaspex.storage.event.EventStorage;
@@ -49,6 +52,8 @@ public class ProviderFactory {
                 return rocketLaunchLiveProviderFromJson(json);
             case "tweakers":
                 return tweakersProviderFromJson(json);
+            case "themoviedb":
+                return theMovieDbProviderFromJson(json);
             default:
                 throw new NoSuchProviderException(type);
         }
@@ -121,6 +126,31 @@ public class ProviderFactory {
         return new TweakersProvider(
             json.get("name").getAsString(),
             articleStorage,
+            new Conditions<>(clauses)
+        );
+    }
+
+    private TheMovieDbProvider theMovieDbProviderFromJson(JsonObject json) {
+        List<Clause<Movie>> clauses = new ArrayList<>();
+        json.get("conditions").getAsJsonArray().forEach(e -> {
+            JsonObject clauseObject = e.getAsJsonObject();
+            List<Condition<Movie>> conditions = new ArrayList<>();
+
+            if (clauseObject.has("hasGenres")) {
+                List<String> genres = new ArrayList<>();
+                clauseObject.get("hasGenres").getAsJsonArray().forEach(g -> genres.add(g.getAsString()));
+                conditions.add(new HasGenresCondition(genres));
+            }
+
+            clauses.add(new Clause<>(conditions));
+        });
+
+        return new TheMovieDbProvider(
+            json.get("name").getAsString(),
+            json.get("source").getAsString(),
+            json.get("apiKey").getAsString(),
+            json.get("interval").getAsInt(),
+            eventStorage,
             new Conditions<>(clauses)
         );
     }

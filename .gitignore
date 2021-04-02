@@ -2,6 +2,8 @@
 config.local.json
 config.test.json
 flyway.local.properties
+.idea/deployment.xml
+.idea/sshConfigs.xml
 # <<<
 
 # >>> Toptotal .gitingore generator
