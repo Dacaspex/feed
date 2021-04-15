@@ -2,7 +2,6 @@ package com.dacaspex.provider.rocketlaunchlive;
 
 import com.dacaspex.provider.Provider;
 import com.dacaspex.provider.RunnableType;
-import com.dacaspex.provider.condition.Condition;
 import com.dacaspex.provider.condition.Conditions;
 import com.dacaspex.provider.rocketlaunchlive.model.LaunchEvent;
 import com.dacaspex.storage.event.EventStorage;
@@ -68,13 +67,18 @@ public class RocketLaunchLiveProvider implements Provider {
 
             Gson gson = new Gson();
             JsonObject json = gson.fromJson(rawJson, JsonObject.class);
+            logger.debug(String.format("Received %s launch events", json.get("result").getAsJsonArray().size()));
             json.get("result").getAsJsonArray().forEach(e -> {
                 LaunchEvent event = mapper.mapJsonToLaunchEvent(e.getAsJsonObject());
 
                 if (!conditions.holds(event)) {
+                    logger.debug(
+                        String.format("Discarding launch %s [%s]", event.getName(), event.getProvider().getName())
+                    );
                     return;
                 }
 
+                logger.debug(String.format("Storing launch %s [%s]", event.getName(), event.getProvider().getName()));
                 eventStorage.insertOrUpdateCalendarEvent(
                     event.getId(),
                     SOURCE,
