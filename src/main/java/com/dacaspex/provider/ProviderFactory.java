@@ -4,7 +4,7 @@ import com.dacaspex.provider.condition.Clause;
 import com.dacaspex.provider.condition.Condition;
 import com.dacaspex.provider.condition.Conditions;
 import com.dacaspex.provider.exception.NoSuchProviderException;
-import com.dacaspex.provider.nos.NosProvider;
+import com.dacaspex.provider.rss.RssProvider;
 import com.dacaspex.provider.reddit.RedditTopProvider;
 import com.dacaspex.provider.reddit.Sort;
 import com.dacaspex.provider.reddit.TimePeriod;
@@ -46,8 +46,8 @@ public class ProviderFactory {
         String type = json.get("type").getAsString();
 
         switch (type) {
-            case "nos":
-                return nosProviderFromJson(json);
+            case "rss":
+                return rssProviderFromJson(json);
             case "reddit":
                 return redditDailyTopProviderFromJson(json);
             case "rocketlaunchlive":
@@ -61,10 +61,11 @@ public class ProviderFactory {
         }
     }
 
-    private NosProvider nosProviderFromJson(JsonObject json) {
-        return new NosProvider(
+    private RssProvider rssProviderFromJson(JsonObject json) {
+        return new RssProvider(
             json.get("name").getAsString(),
             json.get("url").getAsString(),
+            json.get("source").getAsString(),
             articleStorage
         );
     }
