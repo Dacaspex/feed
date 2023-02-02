@@ -1,10 +1,9 @@
 package com.dacaspex.provider.rocketlaunchlive;
 
-import com.dacaspex.provider.Provider;
-import com.dacaspex.provider.RunnableType;
-import com.dacaspex.provider.condition.Conditions;
+import com.dacaspex.collector.ItemCollector;
+import com.dacaspex.collector.models.CalendarEvent;
+import com.dacaspex.provider.AbstractProvider;
 import com.dacaspex.provider.rocketlaunchlive.model.LaunchEvent;
-import com.dacaspex.storage.event.EventStorage;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import okhttp3.Call;
@@ -16,34 +15,15 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 
-public class RocketLaunchLiveProvider implements Provider {
+public class RocketLaunchLiveProvider extends AbstractProvider {
+    private final static String BASE_URL = "https://fdo.rocketlaunch.live/json/launches/next/5";
     private final static Logger logger = LogManager.getLogger();
 
-    private final static String SOURCE = "rocketlaunchlive";
-    private final static String BASE_URL = "https://www.rocketlaunch.live/launch";
-
-    private final String name;
-    private final String url;
-    private final EventStorage eventStorage;
     private final Mapper mapper;
-    private final Conditions<LaunchEvent> conditions;
 
-    public RocketLaunchLiveProvider(String name, String url, EventStorage eventStorage, Conditions<LaunchEvent> conditions) {
-        this.name = name;
-        this.url = url;
-        this.eventStorage = eventStorage;
+    public RocketLaunchLiveProvider(String id, ItemCollector itemCollector) {
+        super(id, itemCollector);
         this.mapper = new Mapper();
-        this.conditions = conditions;
-    }
-
-    @Override
-    public RunnableType getRunnableType() {
-        return RunnableType.ANYTIME;
-    }
-
-    @Override
-    public String getName() {
-        return name;
     }
 
     @Override
@@ -51,7 +31,7 @@ public class RocketLaunchLiveProvider implements Provider {
         OkHttpClient httpClient = new OkHttpClient();
 
         Request request = new Request.Builder()
-            .url(url)
+            .url(BASE_URL)
             .build();
 
         Call call = httpClient.newCall(request);
@@ -67,24 +47,15 @@ public class RocketLaunchLiveProvider implements Provider {
 
             Gson gson = new Gson();
             JsonObject json = gson.fromJson(rawJson, JsonObject.class);
-            logger.debug(String.format("Received %s launch events", json.get("result").getAsJsonArray().size()));
             json.get("result").getAsJsonArray().forEach(e -> {
                 LaunchEvent event = mapper.mapJsonToLaunchEvent(e.getAsJsonObject());
-
-                if (!conditions.holds(event)) {
-                    logger.debug(
-                        String.format("Discarding launch %s [%s]", event.getName(), event.getProvider().getName())
-                    );
-                    return;
-                }
-
-                logger.debug(String.format("Storing launch %s [%s]", event.getName(), event.getProvider().getName()));
-                eventStorage.insertOrUpdateCalendarEvent(
-                    event.getId(),
-                    SOURCE,
-                    event.getDate(),
-                    buildHeader(event),
-                    buildUrl(event)
+                itemCollector.addCalendarEvent(
+                    new CalendarEvent(
+                        id,
+                        event.getDate(),
+                        buildHeader(event),
+                        buildUrl(event)
+                    )
                 );
             });
 

@@ -2,9 +2,9 @@ package com.dacaspex.provider.rss;
 
 import com.apptastic.rssreader.Item;
 import com.apptastic.rssreader.RssReader;
-import com.dacaspex.provider.Provider;
-import com.dacaspex.provider.RunnableType;
-import com.dacaspex.storage.article.ArticleStorage;
+import com.dacaspex.collector.ItemCollector;
+import com.dacaspex.collector.models.Article;
+import com.dacaspex.provider.AbstractProvider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
@@ -18,31 +18,16 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class RssProvider implements Provider {
+public class RssProvider extends AbstractProvider {
     private final static Logger logger = LogManager.getLogger();
 
+    private final RssProviderSettings settings;
     private final RssReader rssReader;
-    private final String name;
-    private final String url;
-    private final String source;
-    private final ArticleStorage articleStorage;
 
-    public RssProvider(String name, String url, String source, ArticleStorage articleStorage) {
+    public RssProvider(String id, ItemCollector itemCollector, RssProviderSettings settings) {
+        super(id, itemCollector);
+        this.settings = settings;
         this.rssReader = new RssReader();
-        this.name = name;
-        this.url = url;
-        this.source = source;
-        this.articleStorage = articleStorage;
-    }
-
-    @Override
-    public RunnableType getRunnableType() {
-        return RunnableType.ANYTIME;
-    }
-
-    @Override
-    public String getName() {
-        return name;
     }
 
     @Override
@@ -50,7 +35,7 @@ public class RssProvider implements Provider {
         // Read from the RSS feed
         Stream<Item> feed;
         try {
-            feed = rssReader.read(url);
+            feed = rssReader.read(settings.url);
         } catch (IOException e) {
             logger.error(e);
             return;
@@ -64,19 +49,20 @@ public class RssProvider implements Provider {
                 continue;
             }
 
-            articleStorage.insertOrUpdateArticle(
-                article.getGuid().orElseThrow(),
-                source,
-                article.getTitle().orElseThrow(),
-                article.getDescription().orElseThrow(),
-                article.getLink().orElseThrow(),
-                date
+            itemCollector.addArticle(
+                new Article(
+                    id,
+                    article.getTitle().orElseThrow(),
+                    article.getDescription().orElseThrow(),
+                    article.getLink().orElseThrow(),
+                    date
+                )
             );
         }
     }
 
     private DateTime extractDateTime(Item article) {
-        // Attempt to parse the publish date, with time zone data. However, this crashes for some RSS feeds
+        // Attempt to parse the published date, with time zone data. However, this crashes for some RSS feeds
         // which provide the data in a different format
         try {
             ZonedDateTime zdt = article.getPubDateZonedDateTime().orElseThrow();
@@ -104,7 +90,7 @@ public class RssProvider implements Provider {
             // Intentionally left blank
         }
 
-        logger.error(String.format("Could not parse date (%s) from RSS (%s) article", article.getPubDate(), name));
+        logger.error(String.format("Could not parse date (%s) from RSS (%s) article", article.getPubDate(), id));
         return null;
     }
 }

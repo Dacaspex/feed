@@ -1,9 +1,7 @@
 package com.dacaspex.provider;
 
 public interface Provider {
-    RunnableType getRunnableType();
-
-    String getName();
+    String getId();
 
     void execute();
 }

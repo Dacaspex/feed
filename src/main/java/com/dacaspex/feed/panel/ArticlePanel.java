@@ -1,19 +1,15 @@
 package com.dacaspex.feed.panel;
 
-import com.dacaspex.storage.article.Article;
+import com.dacaspex.collector.models.Article;
 
 import java.util.List;
 
 public class ArticlePanel extends Panel {
     private final List<Article> articles;
 
-    public ArticlePanel(String name, String header, List<Article> articles) {
-        super(name, header);
+    public ArticlePanel(String header, List<Article> articles) {
+        super(header);
         this.articles = articles;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public String getHeader() {

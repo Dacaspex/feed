@@ -1,18 +1,12 @@
-package com.dacaspex.storage.list;
+package com.dacaspex.collector.models;
 
 public class ListItem {
-    private final String uuid;
     private final String content;
     private final String url;
 
-    public ListItem(String uuid, String content, String url) {
-        this.uuid = uuid;
+    public ListItem(String content, String url) {
         this.content = content;
         this.url = url;
-    }
-
-    public String getUuid() {
-        return uuid;
     }
 
     public String getContent() {
@@ -21,5 +15,10 @@ public class ListItem {
 
     public String getUrl() {
         return url;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("ListItem(content = %s, url = %s)", content, url);
     }
 }

@@ -1,15 +1,13 @@
 package com.dacaspex.main;
 
-import com.dacaspex.command.CommandFactory;
-import com.dacaspex.command.RunProvidersCommand;
-import com.dacaspex.command.RunPublisherCommand;
-import com.dacaspex.exception.InvalidSchemaException;
-import com.dacaspex.feed.PanelDescriptorFactory;
+import com.dacaspex.collector.ItemCollector;
+import com.dacaspex.feed.Feed;
+import com.dacaspex.feed.FeedFactory;
+import com.dacaspex.provider.Provider;
 import com.dacaspex.provider.ProviderFactory;
+import com.dacaspex.provider.exception.NoSuchProviderException;
+import com.dacaspex.publisher.AbstractPublisher;
 import com.dacaspex.publisher.PublisherFactory;
-import com.dacaspex.storage.article.ArticleStorage;
-import com.dacaspex.storage.event.EventStorage;
-import com.dacaspex.storage.list.TemporaryRankedListStorage;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.apache.commons.cli.*;
@@ -19,115 +17,116 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
-    private static final String VERSION = "v0.1.0";
     private static final String DEFAULT_CONFIG_LOCATION = "config.local.json";
-    private static final String OPTION_RUN_PROVIDERS = "i";
-    private static final String OPTION_RUN_PUBLISHERS = "o";
     private static final String OPTION_CONFIG_LOCATION = "c";
 
     private final static Logger logger = LogManager.getLogger();
 
     public static void main(String[] args) throws ParseException {
-        logger.info("Launching application. Configuring...");
-
-        // Build command line options and parse incoming args
+        // Build CLI options and parse incoming args
         Options options = buildCliInterface();
-
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = parser.parse(options, args);
 
         // Load config
-        String json = null;
+        String configJson = loadConfig(cmd);
 
-        String configLocation = cmd.hasOption(OPTION_CONFIG_LOCATION)
-            ? cmd.getOptionValue(OPTION_CONFIG_LOCATION)
-            : DEFAULT_CONFIG_LOCATION;
-
-        try {
-            json = getConfig(configLocation);
-            logger.info("Using configuration file '{}'", configLocation);
-        } catch (IOException e) {
-            logger.fatal("Could not load configuration file: {}", e.getMessage());
-
-            System.exit(-1);
-        }
-
-        // Run program setup. This is normally done via Dependency Injection but I haven't set that up yet
-        // TODO: Setup Dependency Injection
         Gson gson = new Gson();
-        JsonObject config = gson.fromJson(json, JsonObject.class);
-        ArticleStorage articleStorage = new ArticleStorage(
-            config.get("storage").getAsJsonObject().get("host").getAsString(),
-            config.get("storage").getAsJsonObject().get("name").getAsString(),
-            config.get("storage").getAsJsonObject().get("username").getAsString(),
-            config.get("storage").getAsJsonObject().get("password").getAsString()
-        );
-        EventStorage eventStorage = new EventStorage(
-            config.get("storage").getAsJsonObject().get("host").getAsString(),
-            config.get("storage").getAsJsonObject().get("name").getAsString(),
-            config.get("storage").getAsJsonObject().get("username").getAsString(),
-            config.get("storage").getAsJsonObject().get("password").getAsString()
-        );
-        TemporaryRankedListStorage rankedListStorage = new TemporaryRankedListStorage();
-        ProviderFactory providerFactory = new ProviderFactory(VERSION, articleStorage, rankedListStorage, eventStorage);
-        PanelDescriptorFactory panelDescriptorFactory = new PanelDescriptorFactory();
+        JsonObject config = gson.fromJson(configJson, JsonObject.class);
+
+        ItemCollector itemCollector = new ItemCollector();
+        ProviderFactory providerFactory = new ProviderFactory(itemCollector);
         PublisherFactory publisherFactory = new PublisherFactory();
-        CommandFactory commandFactory = new CommandFactory(
-            articleStorage,
-            eventStorage,
-            rankedListStorage,
-            providerFactory,
-            publisherFactory,
-            panelDescriptorFactory
-        );
+        FeedFactory feedFactory = new FeedFactory(itemCollector);
 
-        // Configure commands
-        RunProvidersCommand runProvidersCommand;
-        RunPublisherCommand runPublisherCommand;
-        try {
-            runProvidersCommand = commandFactory.getRunProvidersCommandFromJson(config);
-            runPublisherCommand = commandFactory.getRunPublisherCommandFromJson(config);
-        } catch (InvalidSchemaException e) {
-            logger.fatal(e);
-            System.exit(-1);
-            return;
+        // Create all providers as listed in the config
+        List<Provider> providers = getProvidersFromConfig(config, providerFactory);
+        List<AbstractPublisher> publishers = getPublishersFromConfig(config, publisherFactory);
+
+        // Run all providers
+        for (Provider provider : providers) {
+            provider.execute();
         }
 
-        logger.info("Configured, ready to parse commands");
+        List<Feed> feeds = getFeedsFromConfig(config, feedFactory);
 
-        // Determine command branch execution. Multiple branches may be executed in one run
-        boolean hasExecutedCommand = false;
-        if (cmd.hasOption(OPTION_RUN_PROVIDERS)) {
-            logger.info("Executing run providers command...");
-            runProvidersCommand.run();
-            hasExecutedCommand = true;
+        for (AbstractPublisher publisher : publishers) {
+            Feed feed = feeds.stream().filter(f -> f.getId().equals(publisher.getFeedId())).findFirst().orElseThrow();
+            publisher.publish(feed);
         }
-
-        if (cmd.hasOption(OPTION_RUN_PUBLISHERS)) {
-            logger.info("Executing run publishers command...");
-            runPublisherCommand.run();
-            hasExecutedCommand = true;
-        }
-
-        if (!hasExecutedCommand) {
-            HelpFormatter helpFormatter = new HelpFormatter();
-            helpFormatter.printHelp("java <program name>", options);
-        }
-
-        logger.info("Exiting... Bye \uD83D\uDC4B");
 
         // This may look redundant, but for some reason the OkHttpClient does not terminate its ExecutorService
         // when we do not explicitly exit the program. TODO: Fix this weird behaviour
         System.exit(0);
     }
 
+    private static List<Provider> getProvidersFromConfig(JsonObject config, ProviderFactory providerFactory) {
+        List<Provider> providers = new ArrayList<>();
+
+        config.get("providers")
+            .getAsJsonArray()
+            .forEach(providerJson -> {
+                try {
+                    providers.add(providerFactory.fromJson(providerJson.getAsJsonObject()));
+                } catch (NoSuchProviderException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+        return providers;
+    }
+
+    private static List<AbstractPublisher> getPublishersFromConfig(JsonObject config, PublisherFactory publisherFactory) {
+        List<AbstractPublisher> publishers = new ArrayList<>();
+
+        config.get("publishers")
+            .getAsJsonArray()
+            .forEach(publisherJson -> {
+                publishers.add(publisherFactory.fromJson(publisherJson.getAsJsonObject()));
+            });
+
+        return publishers;
+    }
+
+    private static List<Feed> getFeedsFromConfig(JsonObject config, FeedFactory feedFactory) {
+        List<Feed> feeds = new ArrayList<>();
+
+        config.get("feeds")
+            .getAsJsonArray()
+            .forEach(feedJson -> {
+                try {
+                    feeds.add(feedFactory.fromJson(feedJson.getAsJsonObject()));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+        return feeds;
+    }
+
+    private static String loadConfig(CommandLine cmd) {
+        String configLocation = cmd.hasOption(OPTION_CONFIG_LOCATION)
+            ? cmd.getOptionValue(OPTION_CONFIG_LOCATION)
+            : DEFAULT_CONFIG_LOCATION;
+        logger.info("Using configuration file '{}'", configLocation);
+
+        try {
+            return getConfig(configLocation);
+        } catch (IOException e) {
+            logger.fatal("Could not load configuration file: {}", e.getMessage());
+
+            System.exit(-1);
+            return "";
+        }
+    }
+
     private static Options buildCliInterface() {
         Options options = new Options();
 
-        options.addOption(OPTION_RUN_PROVIDERS, "run-providers", false, "Run content providers");
-        options.addOption(OPTION_RUN_PUBLISHERS, "run-publishers", false, "Run publishers");
         options.addOption(OPTION_CONFIG_LOCATION, "config", true, "Location of config file");
 
         return options;

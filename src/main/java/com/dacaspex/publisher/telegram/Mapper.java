@@ -1,20 +1,20 @@
 package com.dacaspex.publisher.telegram;
 
+import com.dacaspex.collector.models.Article;
+import com.dacaspex.collector.models.CalendarEvent;
+import com.dacaspex.collector.models.ListItem;
 import com.dacaspex.feed.panel.ArticlePanel;
 import com.dacaspex.feed.panel.CalendarEventsPanel;
-import com.dacaspex.feed.panel.RankedListPanel;
-import com.dacaspex.storage.article.Article;
-import com.dacaspex.storage.event.CalendarEvent;
-import com.dacaspex.storage.list.ListItem;
+import com.dacaspex.feed.panel.OrderedListPanel;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 public class Mapper {
-    public String mapRankedListToString(RankedListPanel rankedListPanel) {
+    public String mapRankedListToString(OrderedListPanel rankedListPanel) {
         String header = String.format("<b>%s</b>", rankedListPanel.getHeader());
         StringBuilder events = new StringBuilder();
 
-        for (ListItem item : rankedListPanel.getList()) {
+        for (ListItem item : rankedListPanel.getList().getItems()) {
             events.append(mapRankedListItemToString(item));
         }
 

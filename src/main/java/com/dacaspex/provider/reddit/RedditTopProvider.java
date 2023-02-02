@@ -1,9 +1,9 @@
 package com.dacaspex.provider.reddit;
 
-import com.dacaspex.provider.Provider;
-import com.dacaspex.provider.RunnableType;
-import com.dacaspex.storage.list.ListItem;
-import com.dacaspex.storage.list.TemporaryRankedListStorage;
+import com.dacaspex.collector.ItemCollector;
+import com.dacaspex.collector.models.ListItem;
+import com.dacaspex.collector.models.OrderedList;
+import com.dacaspex.provider.AbstractProvider;
 import net.dean.jraw.RedditClient;
 import net.dean.jraw.http.NetworkAdapter;
 import net.dean.jraw.http.OkHttpNetworkAdapter;
@@ -25,72 +25,28 @@ import java.util.List;
  * top posts from a subreddit, aggregated by 24h, weekly, monthly, etc. This provider
  * is built upon the <a href="https://github.com/mattbdean/JRAW">JRAW API</a>.
  */
-public class RedditTopProvider implements Provider {
-    private static final String PLATFORM = "bot";
-    private static final String APP_ID = "com.dacaspex.feed";
+public class RedditTopProvider extends AbstractProvider {
     private static final String REDDIT_BASE_URL = "https://www.reddit.com";
-
     private final static Logger logger = LogManager.getLogger();
 
-    private final String name;
-    private final TemporaryRankedListStorage rankedListStorage;
-    private final String source;
+    private final RedditTopProviderSettings settings;
 
-    private final String version;
-    private final String redditUsername;
-    private final String redditPassword;
-    private final String clientId;
-    private final String clientSecret;
-    private final String subreddit;
-    private final int amount;
-    private final TimePeriod timePeriod;
-    private final Sort sort;
-
-    public RedditTopProvider(
-        String name,
-        TemporaryRankedListStorage rankedListStorage,
-        String source,
-        String version,
-        String redditUsername,
-        String redditPassword,
-        String clientId,
-        String clientSecret,
-        String subreddit,
-        int amount,
-        TimePeriod timePeriod,
-        Sort sort
-    ) {
-        this.name = name;
-        this.rankedListStorage = rankedListStorage;
-        this.source = source;
-        this.version = version;
-        this.redditUsername = redditUsername;
-        this.redditPassword = redditPassword;
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
-        this.subreddit = subreddit;
-        this.amount = amount;
-        this.timePeriod = timePeriod;
-        this.sort = sort;
-    }
-
-    @Override
-    public RunnableType getRunnableType() {
-        return RunnableType.AD_HOC;
-    }
-
-    @Override
-    public String getName() {
-        return name;
+    public RedditTopProvider(String id, ItemCollector itemCollector, RedditTopProviderSettings settings) {
+        super(id, itemCollector);
+        this.settings = settings;
     }
 
     @Override
     public void execute() {
         try {
-            // Setup the reddit client
-            UserAgent userAgent = new UserAgent(PLATFORM, APP_ID, version, redditUsername);
-
-            Credentials credentials = Credentials.script(redditUsername, redditPassword, clientId, clientSecret);
+            // Set up the reddit client
+            UserAgent userAgent = new UserAgent(settings.platform, settings.appId, settings.version, settings.username);
+            Credentials credentials = Credentials.script(
+                settings.username,
+                settings.password,
+                settings.clientId,
+                settings.clientSecret
+            );
 
             // https://github.com/square/okhttp/issues/1739
             NetworkAdapter adapter = new OkHttpNetworkAdapter(userAgent);
@@ -102,27 +58,21 @@ public class RedditTopProvider implements Provider {
 
             // Get the posts from reddit
             DefaultPaginator<Submission> paginator = redditClient
-                .subreddit(subreddit)
+                .subreddit(settings.subReddit)
                 .posts()
-                .limit(amount)
-                .sorting(getSubredditSort(sort))
-                .timePeriod(getTimePeriod(timePeriod))
+                .limit(settings.amount)
+                .sorting(getSubredditSort(settings.sort))
+                .timePeriod(getTimePeriod(settings.timePeriod))
                 .build();
 
             Listing<Submission> popular = paginator.next();
 
-            List<ListItem> list = new ArrayList<>();
+            List<ListItem> items = new ArrayList<>();
             for (Submission submission : popular) {
-                list.add(
-                    new ListItem(
-                        submission.getUniqueId(),
-                        submission.getTitle(),
-                        getRedditUrl(submission.getPermalink())
-                    )
-                );
+                items.add(new ListItem(submission.getTitle(), getRedditUrl(submission.getPermalink())));
             }
 
-            rankedListStorage.addList(source, list);
+            itemCollector.addOrderedList(new OrderedList(id, items));
         } catch (Exception e) {
             logger.error(e);
         }

@@ -4,8 +4,8 @@ import com.dacaspex.feed.Feed;
 import com.dacaspex.feed.panel.ArticlePanel;
 import com.dacaspex.feed.panel.CalendarEventsPanel;
 import com.dacaspex.feed.panel.Panel;
-import com.dacaspex.feed.panel.RankedListPanel;
-import com.dacaspex.publisher.Publisher;
+import com.dacaspex.feed.panel.OrderedListPanel;
+import com.dacaspex.publisher.AbstractPublisher;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.request.ParseMode;
 import com.pengrad.telegrambot.request.SendMessage;
@@ -17,24 +17,19 @@ import com.pengrad.telegrambot.request.SendMessage;
  * @see <a href="https://core.telegram.org/bots">Telegram API</a>
  * @see <a href="https://github.com/pengrad/java-telegram-bot-api">java-telegram-bot-api</a>
  */
-public class TelegramPublisher implements Publisher {
-    private final String token;
-    private final String chatId;
+public class TelegramPublisher extends AbstractPublisher {
+    public final TelegramPublisherSettings settings;
     private final Mapper mapper;
 
-    private TelegramBot bot;
-
-    public TelegramPublisher(String token, String chatId) {
-        this.token = token;
-        this.chatId = chatId;
+    public TelegramPublisher(String feedId, TelegramPublisherSettings settings) {
+        super(feedId);
+        this.settings = settings;
         this.mapper = new Mapper();
     }
 
-    public void init() {
-        bot = new TelegramBot(token);
-    }
-
     public void publish(Feed feed) {
+        TelegramBot bot = new TelegramBot(settings.token);
+
         for (Panel panel : feed.getPanels()) {
             String content = null;
 
@@ -47,13 +42,13 @@ public class TelegramPublisher implements Publisher {
                 content = mapper.mapCalendarEventsPanelToString((CalendarEventsPanel) panel);
             }
 
-            if (panel instanceof RankedListPanel) {
-                content = mapper.mapRankedListToString((RankedListPanel) panel);
+            if (panel instanceof OrderedListPanel) {
+                content = mapper.mapRankedListToString((OrderedListPanel) panel);
             }
 
             // Attempt to send the request
             // TODO: We are not checking for exceptions here, point for improvement
-            SendMessage request = new SendMessage(chatId, content)
+            SendMessage request = new SendMessage(settings.chatId, content)
                 .parseMode(ParseMode.HTML)
                 .disableWebPagePreview(true);
 

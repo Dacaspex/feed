@@ -1,34 +1,21 @@
-package com.dacaspex.storage.article;
+package com.dacaspex.collector.models;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-public class Article {
-    private final int id;
-    private final String uuid;
-    private final String source;
+public class Article extends AbstractItem {
     private final String title;
     private final String body;
     private final String link;
     private final DateTime publishedAt;
 
-    public Article(int id, String uuid, String source, String title, String body, String link, DateTime publishedAt) {
-        this.id = id;
-        this.uuid = uuid;
-        this.source = source;
+    public Article(String sourceId, String title, String body, String link, DateTime publishedAt) {
+        super(sourceId);
         this.title = title;
         this.body = body;
         this.link = link;
         this.publishedAt = publishedAt;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public String getSource() {
-        return source;
     }
 
     public String getTitle() {
@@ -52,10 +39,7 @@ public class Article {
         DateTimeFormatter dtf = DateTimeFormat.forPattern("MM/dd/yyyy HH:mm:ss");
 
         return String.format(
-            "Article(id = %s, uuid = %s, source = %s, title = %s, body = %s, link = %s, publishedAt = %s",
-            id,
-            uuid,
-            source,
+            "Article(title = %s, body = %s, link = %s, publishedAt = %s)",
             title,
             body,
             link,
